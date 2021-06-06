@@ -1,26 +1,42 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useCallback, useEffect, useState } from 'react'
+import './App.scss'
+import { Enigma } from './enigma/enigma'
+import { config } from './enigma/enigma.config'
+
+const enigma = new Enigma()
+enigma.setConfig(config)
 
 function App() {
+  const [chars, setChars] = useState([] as string[])
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (/^\w$/.test(e.key)) {
+        const output = enigma.encrypt(e.key)
+
+        setChars([...chars, output])
+      }
+    },
+    [chars, setChars]
+  )
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown, false)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [handleKeyDown])
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+      <header>
+        <img src="Enigma-logo.jpg" alt="Enigma" />
       </header>
+
+      <div className="indicator">{chars}</div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
