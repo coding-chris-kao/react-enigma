@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Subject } from 'rxjs'
+import { debounceTime } from 'rxjs/operators'
 import './App.scss'
 import LightBulb, { LightBulbStatus } from './components/LightBulb'
 import { Enigma } from './enigma/enigma'
@@ -44,40 +46,46 @@ function setLightBulbStatus(
   return lightBulbs
 }
 
+const encrypt$ = new Subject<KeyboardEvent>()
+
 function App() {
   const defaultLightBulbs = createLightBulbs()
   const [chars, setChars] = useState([] as string[])
   const lightBulbs = useRef(defaultLightBulbs)
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (/^\w$/.test(e.key)) {
-        const output = enigma.encrypt(e.key)
-        setLightBulbStatus(lightBulbs.current, output, true)
-        setChars([...chars, output])
-        setLightBulbStatus(lightBulbs.current, output, false)
-      } else if (e.code === 'Space') {
-        setChars([...chars, ' '])
-      } else if (e.code === 'Backspace') {
-        if (chars.length === 0) return
-        if (chars[chars.length - 1] !== ' ') {
-          enigma.subtractOneTick()
-        }
-        const clone = [...chars]
-        clone.splice(clone.length - 1, 1)
-        setChars(clone)
-      }
-    },
-    [chars, lightBulbs, setChars]
-  )
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    encrypt$.next(e)
+  }, [])
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown, false)
 
+    const encryptSubscription = encrypt$
+      .pipe(debounceTime(10))
+      .subscribe((e: KeyboardEvent) => {
+        if (/^\w$/.test(e.key)) {
+          const output = enigma.encrypt(e.key)
+          setLightBulbStatus(lightBulbs.current, output, true)
+          setChars([...chars, output])
+          setLightBulbStatus(lightBulbs.current, output, false)
+        } else if (e.code === 'Space') {
+          setChars([...chars, ' '])
+        } else if (e.code === 'Backspace') {
+          if (chars.length === 0) return
+          if (chars[chars.length - 1] !== ' ') {
+            enigma.subtractOneTick()
+          }
+          const clone = [...chars]
+          clone.splice(clone.length - 1, 1)
+          setChars(clone)
+        }
+      })
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
+      encryptSubscription.unsubscribe()
     }
-  }, [handleKeyDown])
+  }, [chars, lightBulbs, setChars, handleKeyDown])
 
   return (
     <div className="App">
@@ -85,7 +93,14 @@ function App() {
         <img src="Enigma-logo.svg" alt="Enigma" />
       </header>
 
-      <div className="indicator">{chars}</div>
+      <div className="input-wrapper">
+        <input
+          type="text"
+          className="enigma-input"
+          value={chars.join('')}
+          onChange={(e) => e.preventDefault()}
+        />
+      </div>
 
       <div className="row">{LightBulbRow(lightBulbs.current[0])}</div>
       <div className="row">{LightBulbRow(lightBulbs.current[1])}</div>

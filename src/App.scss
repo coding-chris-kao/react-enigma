@@ -1,4 +1,5 @@
 .App {
+  width: 100vw;
   height: 100vh;
   text-align: center;
 
@@ -25,4 +26,28 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.input-wrapper {
+  width: 100vw;
+  margin: auto;
+  margin-bottom: 50px;
+}
+
+:focus {
+  outline: none;
+}
+
+.enigma-input {
+  border: 0;
+  transition: 0.4s;
+  text-align: center;
+  font-size: 50px;
+  width: 100%;
+}
+
+@media (max-width: 400px) {
+  .enigma-input {
+    font-size: 40px;
+  }
 }
