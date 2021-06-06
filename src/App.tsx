@@ -31,7 +31,7 @@ function App() {
   return (
     <div className="App">
       <header>
-        <img src="Enigma-logo.jpg" alt="Enigma" />
+        <img src="Enigma-logo.svg" alt="Enigma" />
       </header>
 
       <div className="indicator">{chars}</div>
