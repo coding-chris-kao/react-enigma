@@ -1,12 +1,28 @@
 .App {
   height: 100vh;
   text-align: center;
+
+  header {
+    margin: 30px 0;
+
+    img {
+      width: 200px;
+    }
+  }
 }
 
-.indicator{
+.indicator {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  height: 50px;
   font-size: 50px;
+  margin-bottom: 50px;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
