@@ -46,7 +46,7 @@ function setLightBulbStatus(
   return lightBulbs
 }
 
-const encrypt$ = new Subject<KeyboardEvent>()
+const encrypt$ = new Subject<KeyboardEvent | string>()
 
 function App() {
   const defaultLightBulbs = createLightBulbs()
@@ -57,13 +57,32 @@ function App() {
     encrypt$.next(e)
   }, [])
 
+  const handlePaste = useCallback((e: ClipboardEvent) => {
+    encrypt$.next(e.clipboardData?.getData('text') || '')
+  }, [])
+
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown, false)
+    document.addEventListener('paste', handlePaste, false)
 
     const encryptSubscription = encrypt$
       .pipe(debounceTime(10))
-      .subscribe((e: KeyboardEvent) => {
-        if (/^\w$/.test(e.key)) {
+      .subscribe((e: KeyboardEvent | string) => {
+        if (typeof e === 'string') {
+          const letters = e.split('')
+          const outputs = []
+          for (let letter of letters) {
+            const output = enigma.encrypt(letter)
+            setLightBulbStatus(lightBulbs.current, output, true)
+            outputs.push(output)
+          }
+          setChars([...chars, ...outputs])
+          for (let output of outputs) {
+            setLightBulbStatus(lightBulbs.current, output, false)
+          }
+        } else if (e.metaKey) {
+          return
+        } else if (/^\w$/.test(e.key)) {
           const output = enigma.encrypt(e.key)
           setLightBulbStatus(lightBulbs.current, output, true)
           setChars([...chars, output])
@@ -83,9 +102,10 @@ function App() {
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('paste', handlePaste)
       encryptSubscription.unsubscribe()
     }
-  }, [chars, lightBulbs, setChars, handleKeyDown])
+  }, [chars, lightBulbs, setChars, handleKeyDown, handlePaste])
 
   return (
     <div className="App">

@@ -1,6 +1,6 @@
 import { Logger } from '../utils/logger'
 
-const DEBUG_MODE = true
+const DEBUG_MODE = false
 const START_CODE = 65
 const END_CODE = 90
 
