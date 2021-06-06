@@ -133,4 +133,16 @@ export class Enigma {
       }
     }
   }
+
+  public subtractOneTick() {
+    let temp = this.rotors[0].offset - 1
+    this.rotors[0].offset = (26 + temp) % 26
+    for (let i = 0; i < this.rotors.length; i++) {
+      if (i === 0) continue
+      if (this.rotors[i - 1].offset === 25) {
+        let temp = this.rotors[i].offset - 1
+        this.rotors[i].offset = (26 + temp) % 26
+      }
+    }
+  }
 }

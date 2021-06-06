@@ -56,6 +56,16 @@ function App() {
         setLightBulbStatus(lightBulbs.current, output, true)
         setChars([...chars, output])
         setLightBulbStatus(lightBulbs.current, output, false)
+      } else if (e.code === 'Space') {
+        setChars([...chars, ' '])
+      } else if (e.code === 'Backspace') {
+        if (chars.length === 0) return
+        if (chars[chars.length - 1] !== ' ') {
+          enigma.subtractOneTick()
+        }
+        const clone = [...chars]
+        clone.splice(clone.length - 1, 1)
+        setChars(clone)
       }
     },
     [chars, lightBulbs, setChars]
