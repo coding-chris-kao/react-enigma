@@ -6,8 +6,7 @@ import LightBulb, { LightBulbStatus } from './components/LightBulb'
 import { Enigma } from './enigma/enigma'
 import { config } from './enigma/enigma.config'
 
-const enigma = new Enigma()
-enigma.setConfig(config)
+const enigma = new Enigma(config)
 
 function createLightBulbs(): LightBulbStatus[][] {
   const LIGHT_BULBS = [

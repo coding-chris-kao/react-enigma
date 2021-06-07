@@ -1,4 +1,5 @@
 import { Logger } from '../utils/logger'
+import { reflectorSpecs, rotorSpecs } from './enigma.specification'
 
 const DEBUG_MODE = false
 const START_CODE = 65
@@ -7,14 +8,28 @@ const END_CODE = 90
 export interface EnigmnaConfig {
   rotorlOrders: string[]
   rotorPositions: number[]
+  reflectorType: string
   plugs: string[]
 }
 
-export interface Transferable {
-  transfer(input: string): string
+export class Wirable {
+  public wiringMap: Map<string, string>
+
+  constructor(wiring: string) {
+    this.wiringMap = new Map<string, string>()
+
+    let index = START_CODE
+    for (let letter of wiring) {
+      this.wiringMap.set(String.fromCharCode(index++), letter)
+    }
+  }
+
+  public wireFrom(input: string): string {
+    return this.wiringMap.has(input) ? this.wiringMap.get(input)! : input
+  }
 }
 
-export class PlugBoard extends Map implements Transferable {
+export class PlugBoard extends Map {
   public transfer(input: string) {
     if (!this.has(input)) return input
     return this.get(input)
@@ -30,7 +45,15 @@ export class PlugBoard extends Map implements Transferable {
 }
 
 export class Rotor {
-  constructor(public no: string, public offset: number) {}
+  public wirable: Wirable
+
+  constructor(public name: string, public offset: number) {
+    let spec = rotorSpecs.find((spec) => spec.name === name)
+    if (!spec) {
+      throw new Error(`Rotor constructor: The spec ${name} can not be found`)
+    }
+    this.wirable = new Wirable(spec.wiring)
+  }
 
   public forwardTransfer(input: string): string {
     if (input.length !== 1)
@@ -40,7 +63,8 @@ export class Rotor {
     if (charCode < START_CODE && charCode > END_CODE) return input
 
     const outcomePosition = (charCode - START_CODE + this.offset) % 26
-    return String.fromCharCode(START_CODE + outcomePosition)
+    const letter = String.fromCharCode(START_CODE + outcomePosition)
+    return this.wirable.wireFrom(letter)
   }
 
   public backwardTransfer(input: string): string {
@@ -52,12 +76,21 @@ export class Rotor {
 
     const outcomePosition = (charCode - START_CODE + this.offset) % 26
     const backwardPosition = (26 - outcomePosition) % 26
-    return String.fromCharCode(START_CODE + backwardPosition)
+    const letter = String.fromCharCode(START_CODE + backwardPosition)
+    return this.wirable.wireFrom(letter)
   }
 }
 
-export class Reflector implements Transferable {
-  constructor(private offset = 13) {}
+export class Reflector {
+  public wirable: Wirable
+
+  constructor(public name: string) {
+    let spec = reflectorSpecs.find((spec) => spec.name === name)
+    if (!spec) {
+      throw new Error(`Rotor constructor: The spec ${name} can not be found`)
+    }
+    this.wirable = new Wirable(spec.wiring)
+  }
 
   public transfer(input: string) {
     if (input.length !== 1)
@@ -66,19 +99,18 @@ export class Reflector implements Transferable {
     let charCode = input.charCodeAt(0)
     if (charCode < START_CODE && charCode > END_CODE) return input
 
-    return String.fromCharCode(
-      START_CODE + ((charCode - START_CODE + this.offset) % 26)
-    )
+    return this.wirable.wireFrom(input)
   }
 }
 
 export class Enigma {
   private rotors: Rotor[] = []
-  private reflector: Reflector = new Reflector()
+  private reflector!: Reflector
   private plugBoard: PlugBoard = new PlugBoard()
   private logger: Logger = new Logger(DEBUG_MODE)
 
-  constructor() {
+  constructor(config: EnigmnaConfig) {
+    this.setConfig(config)
     this.logger.debug('Enigma was built.')
   }
 
@@ -96,6 +128,9 @@ export class Enigma {
         new Rotor(config.rotorlOrders[i], config.rotorPositions[i])
       )
     }
+
+    // Set Reflector
+    this.reflector = new Reflector(config.reflectorType)
 
     // Set plug board
     this.plugBoard.setPlugs(config.plugs)
