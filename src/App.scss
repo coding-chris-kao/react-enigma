@@ -2,6 +2,9 @@
   width: 100vw;
   height: 100vh;
   text-align: center;
+  padding-top: 30px;
+  background-image: url('./assets/background.jpg');
+  background-size: cover;
 
   header {
     margin: 30px 0;
@@ -44,6 +47,8 @@
   text-align: center;
   font-size: 50px;
   width: 100%;
+  background-color: transparent;
+  color: whitesmoke;
 }
 
 @media (max-width: 400px) {

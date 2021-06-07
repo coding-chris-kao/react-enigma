@@ -109,7 +109,7 @@ function App() {
   return (
     <div className="App">
       <header>
-        <img src="Enigma-logo.svg" alt="Enigma" />
+        <img src="react-enigma/enigma-logo.svg" alt="Enigma" />
       </header>
 
       <div className="input-wrapper">
